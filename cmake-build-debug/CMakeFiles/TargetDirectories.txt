@@ -1,0 +1,6 @@
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/terminalOS.dir
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/dirname.dir
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/tee.dir
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/cp.dir
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/catalina/CLionProjects/terminalOS/cmake-build-debug/CMakeFiles/rebuild_cache.dir
