@@ -6,20 +6,21 @@
 #include <readline/history.h>
 #include <iostream>
 #include <sys/wait.h>
+#include <vector>
+
 using namespace std;
 
 char projectDirectory[1024];
 
-int history(char *read)
+int history(string &read)
 {
-    char *line;
+    string line;
     line = readline("\033[95mcatalina@catalina-VirtualBox\033[0m:\033[96m$\033[0m> ");
-    if (line)
+    if (!line.empty())
     {
-        strcpy(read,line);
-        if(strcmp(read,"") != 0)
-            add_history(read);
-        free(line);
+        read = line;
+        if(!read.empty())
+            add_history(read.c_str());
     }
     return 0;
 }
@@ -59,31 +60,29 @@ int execute(char **commandArray, int len)
     return 0;
 }
 
-void separateCommand(char *line, char **commandArray)
+void separateCommand(string &line, char **commandArray)
 {
+    size_t start = 0;
+    size_t end = line.find(' ');
     int i = 0;
-    char *p = line;
-    commandArray[i] = p;
-    i++;
-    while (*p != '\0')
+    while (end != string::npos)
     {
-        if (*p == ' ')
-        {
-            *p = '\0';
-            p++;
-            commandArray[i] = p;
-            i++;
-        }
-        else
-            p++;
+        commandArray[i] = new char[end - start + 1];
+        strcpy(commandArray[i], line.substr(start, end - start).c_str());
+        start = end + 1;
+        end = line.find(' ', start);
+        i++;
     }
+    commandArray[i] = new char[line.size() - start + 1];
+    strcpy(commandArray[i], line.substr(start).c_str());
+    i++;
     commandArray[i] = NULL;
 }
 
 int main(int argc, char **argv)
 {
     int pid;
-    char read_line[1024];
+    string read_line;
     system("clear");
     getcwd(projectDirectory, sizeof(projectDirectory));
     path();
@@ -98,7 +97,7 @@ int main(int argc, char **argv)
             if(commandArray[i][0] != 0)
                 length++;
 
-        if (strcmp(commandArray[0], "exit") == 0)
+        if(strcmp(commandArray[0], "exit") == 0)
              exit(0);
         else
         {
