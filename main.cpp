@@ -15,7 +15,7 @@ char projectDirectory[1024];
 int history(string &read)
 {
     string line;
-    line = readline("\033[95mcatalina@catalina-VirtualBox\033[0m:\033[96m$\033[0m> ");
+    line = readline("catalina@catalina-VirtualBox$> ");
     if (!line.empty())
     {
         read = line;
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
                 length++;
 
         if(strcmp(commandArray[0], "exit") == 0)
-             exit(0);
+            exit(0);
         else
         {
             pid = fork();

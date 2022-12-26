@@ -7,18 +7,24 @@ using namespace std;
 
 struct option long_options[] = {
         {"help", no_argument, 0, 'h'},
-        {0, 0, 0, 0}
+        {"version", no_argument, 0, 'v'}
 };
 
 int main(int argc, char **argv)
 {
     int hflag = 0;
-    int optarg;
-    while ((optarg = getopt_long(argc, argv, "h", long_options, NULL)) != -1)
+    int vflag = 0;
+    int n;
+    while ((n = getopt_long(argc, argv, "hv", long_options, NULL)) != -1)
     {
-        if(optarg == 'h')
+        if(n == 'h')
         {
             hflag = 1;
+            break;
+        }
+        if(n == 'v')
+        {
+            vflag = 1;
             break;
         }
         else
@@ -32,9 +38,8 @@ int main(int argc, char **argv)
                "Output each NAME with its last non-slash component and trailing slashes\n"
                "removed; if NAME contains no /'s, output '.' (meaning the current directory).\n"
                "\n"
-               "  -z, --zero     end each output line with NUL, not newline\n"
-               "      --help     display this help and exit\n"
-               "      --version  output version information and exit\n"
+               "  -h, --help     display this help and exit\n"
+               "  -v, --version  output version information and exit\n"
                "\n"
                "Examples:\n"
                "  dirname /usr/bin/          -> \"/usr\"\n"
@@ -44,6 +49,10 @@ int main(int argc, char **argv)
                "GNU coreutils online help: <https://www.gnu.org/software/coreutils/>\n"
                "Full documentation <https://www.gnu.org/software/coreutils/dirname>\n"
                "or available locally via: info '(coreutils) dirname invocation'" << endl;
+    else if(vflag != 0)
+        cout << "dirname version 1\n"
+                "Copyright (C) 2022\n"
+                "Written by Catalina Chirtes" << endl;
     else
     {
         if (argc < 2) {
