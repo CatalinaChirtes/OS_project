@@ -41,11 +41,11 @@ int execute(char **commandArray, int len)
     strcpy(loc,location.c_str());
 
     if (strcmp(commandArray[0], "cp") == 0)
-        execv("/home/catalina/CLionProjects/terminalOS/bin/cp", commandArray);
+        execv("bin/cp", commandArray);
     else if (strcmp(commandArray[0], "tee") == 0)
-        execv("/home/catalina/CLionProjects/terminalOS/bin/tee", commandArray);
+        execv("bin/tee", commandArray);
     else if (strcmp(commandArray[0], "dirname") == 0)
-        execv("/home/catalina/CLionProjects/terminalOS/bin/dirname", commandArray);
+        execv("bin/dirname", commandArray);
     else if (strcmp(commandArray[0], "cd") == 0)
         cout<<"Here will be the cd command..."<<endl;
     else if(execv(loc, commandArray) == -1 && strcmp(commandArray[0], "") != 0)
