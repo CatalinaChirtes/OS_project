@@ -20,6 +20,10 @@ int history(string &read)
         if(!read.empty())
             add_history(read.c_str());
     }
+    else
+    {
+        read = "";
+    }
     return 0;
 }
 

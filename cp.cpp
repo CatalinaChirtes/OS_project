@@ -83,7 +83,8 @@ void argType(int argc, char **argv, char **sourceArray, char *destination)
             }
         }
     }
-    else{
+    else
+    {
         for(int i=1;i<argc;i++)
         {
             if (argv[i][0] != '-')
@@ -342,7 +343,7 @@ int main(int argc, char **argv)
         for (int i=0; i<sourceFolderSize; i++)
         {
             size_t pos = sourceFolder[i].find('/');
-            if (pos != std::string::npos)
+            if (pos != string::npos)
             {
                 sourceFolder[i] = sourceFolder[i].substr(pos+1);
             }
