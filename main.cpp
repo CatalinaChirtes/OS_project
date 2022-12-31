@@ -84,7 +84,7 @@ int execute(char **commandArray, int len)
     else if (strcmp(commandArray[0], "dirname") == 0)
         execv("bin/dirname", commandArray);
     else if (strcmp(commandArray[0], "cd") == 0)
-        cout<<"Here will be the cd command..."<<endl;
+        cout<<"The cd command is not supported yet."<<endl;
     else if(execv(loc, commandArray) == -1 && strcmp(commandArray[0], "") != 0)
     {
         for(int i=0;i<len;i++)
