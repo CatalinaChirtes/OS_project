@@ -1,6 +1,8 @@
 #include <string>
 #include <iostream>
 #include <string.h>
+#include <fstream>
+#include <vector>
 
 using namespace std;
 
@@ -37,8 +39,8 @@ int main(int argc, char **argv)
         cout << "Usage: tee [OPTION]... [FILE]...\n"
                 "Copy standard input to each FILE, and also to standard output.\n"
                 "\n"
-                "  -a, --append              append to the given FILEs, do not overwrite\n"
-                "  -h, --help     display this help and exit\n"
+                "  -a                 append to the given FILEs, do not overwrite\n"
+                "  -h                 display this help and exit\n"
                 "\n"
                 "GNU coreutils online help: <https://www.gnu.org/software/coreutils/>\n"
                 "Full documentation <https://www.gnu.org/software/coreutils/tee>\n"
@@ -52,14 +54,42 @@ int main(int argc, char **argv)
     }
     else if(aflag != 0)
     {
-        cout << "aflag" << endl;
+        vector<string> commands;
+        string line;
+        while (getline(cin, line))
+        {
+            cout << line << endl;
+            commands.push_back(line);
+        }
+        for(int i=1;i<argc;i++)
+        {
+            if (string(argv[i]) == "-a") {
+                continue;
+            }
+
+            ofstream file(argv[i], ios::app);
+            for(const auto &line : commands)
+            {
+                file << line << endl;
+            }
+        }
     }
     else
     {
-        if (argc < 2) {
-            cerr << "tee: missing operand\n"
-                    "Try 'tee --help' for more information." << endl;
-            return 1;
+        vector<string> commands;
+        string line;
+        while (getline(cin, line))
+        {
+            cout << line << endl;
+            commands.push_back(line);
+        }
+        for(int i=1;i<argc;i++)
+        {
+            ofstream file(argv[i]);
+            for(const auto &line : commands)
+            {
+                file << line << endl;
+            }
         }
     }
     return 0;

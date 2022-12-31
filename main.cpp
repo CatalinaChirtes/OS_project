@@ -27,6 +27,49 @@ int history(string &read)
     return 0;
 }
 
+// we split our string every time we encounter the " | " pipe character
+// then we append the newly created strings, representing our commands, into an array of commands
+void separateCommandByPipes(string &line, char **pipedCommandsArray)
+{
+    size_t start = 0;
+    string charPipe = " | ";
+    size_t end = line.find(charPipe);
+    int i = 0;
+    while (end != string::npos)
+    {
+        pipedCommandsArray[i] = new char[end - start + 1];
+        strcpy(pipedCommandsArray[i], line.substr(start, end - start).c_str());
+        start = end + 3;
+        end = line.find(charPipe, start);
+        i++;
+    }
+    pipedCommandsArray[i] = new char[line.size() - start + 1];
+    strcpy(pipedCommandsArray[i], line.substr(start).c_str());
+    i++;
+    pipedCommandsArray[i] = NULL;
+}
+
+// we split our string every time we encounter the " " space character
+// then we append the newly created strings, representing our arguments, into an array of arguments
+void separateCommand(string &line, char **commandArray)
+{
+    size_t start = 0;
+    size_t end = line.find(' ');
+    int i = 0;
+    while (end != string::npos)
+    {
+        commandArray[i] = new char[end - start + 1];
+        strcpy(commandArray[i], line.substr(start, end - start).c_str());
+        start = end + 1;
+        end = line.find(' ', start);
+        i++;
+    }
+    commandArray[i] = new char[line.size() - start + 1];
+    strcpy(commandArray[i], line.substr(start).c_str());
+    i++;
+    commandArray[i] = NULL;
+}
+
 int execute(char **commandArray, int len)
 {
     char loc[1024];
@@ -52,49 +95,6 @@ int execute(char **commandArray, int len)
         execv(loc, commandArray);
 
     return 0;
-}
-
-// we split our string every time we encounter the " " space character
-// then we append the newly created strings, representing our arguments, into an array of arguments
-void separateCommand(string &line, char **commandArray)
-{
-    size_t start = 0;
-    size_t end = line.find(' ');
-    int i = 0;
-    while (end != string::npos)
-    {
-        commandArray[i] = new char[end - start + 1];
-        strcpy(commandArray[i], line.substr(start, end - start).c_str());
-        start = end + 1;
-        end = line.find(' ', start);
-        i++;
-    }
-    commandArray[i] = new char[line.size() - start + 1];
-    strcpy(commandArray[i], line.substr(start).c_str());
-    i++;
-    commandArray[i] = NULL;
-}
-
-// we split our string every time we encounter the " | " pipe character
-// then we append the newly created strings, representing our commands, into an array of commands
-void separateCommandByPipes(string &line, char **pipedCommandsArray)
-{
-    size_t start = 0;
-    string charPipe = " | ";
-    size_t end = line.find(charPipe);
-    int i = 0;
-    while (end != string::npos)
-    {
-        pipedCommandsArray[i] = new char[end - start + 1];
-        strcpy(pipedCommandsArray[i], line.substr(start, end - start).c_str());
-        start = end + 3;
-        end = line.find(charPipe, start);
-        i++;
-    }
-    pipedCommandsArray[i] = new char[line.size() - start + 1];
-    strcpy(pipedCommandsArray[i], line.substr(start).c_str());
-    i++;
-    pipedCommandsArray[i] = NULL;
 }
 
 int main(int argc, char **argv)
