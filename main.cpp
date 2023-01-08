@@ -7,6 +7,7 @@
 #include <iostream>
 #include <sys/wait.h>
 #include <vector>
+#include <regex>
 
 using namespace std;
 
@@ -32,14 +33,14 @@ int history(string &read)
 void separateCommandByPipes(string &line, char **pipedCommandsArray)
 {
     size_t start = 0;
-    string charPipe = " | ";
+    string charPipe = "|";
     size_t end = line.find(charPipe);
     int i = 0;
     while (end != string::npos)
     {
         pipedCommandsArray[i] = new char[end - start + 1];
         strcpy(pipedCommandsArray[i], line.substr(start, end - start).c_str());
-        start = end + 3;
+        start = end + 1;
         end = line.find(charPipe, start);
         i++;
     }
@@ -49,24 +50,68 @@ void separateCommandByPipes(string &line, char **pipedCommandsArray)
     pipedCommandsArray[i] = NULL;
 }
 
+//void separateCommand(string &line, char **commandArray)
+//{
+//    line = regex_replace(line, regex(" +"), " ");
+//    line = regex_replace(line, regex("^ +"), "");
+//    line = regex_replace(line, regex(" +$"), "");
+//    size_t start = 0;
+//    size_t end = line.find(' ');
+//    int i = 0;
+//    while (end != string::npos)
+//    {
+//        commandArray[i] = new char[end - start + 1];
+//        strcpy(commandArray[i], line.substr(start, end - start).c_str());
+//        start = end + 1;
+//        end = line.find(' ', start);
+//        i++;
+//    }
+//    commandArray[i] = new char[line.size() - start + 1];
+//    strcpy(commandArray[i], line.substr(start).c_str());
+//    i++;
+//    commandArray[i] = NULL;
+//}
+
 // we split our string every time we encounter the " " space character
 // then we append the newly created strings, representing our arguments, into an array of arguments
-void separateCommand(string &line, char **commandArray)
-{
+// this function recognizes also arguments with "" or ''
+void separateCommand(string &line, char **commandArray) {
+    line = regex_replace(line, regex(" +"), " ");
+    line = regex_replace(line, regex("^ +"), "");
+    line = regex_replace(line, regex(" +$"), "");
     size_t start = 0;
     size_t end = line.find(' ');
     int i = 0;
-    while (end != string::npos)
+    char currentChar = ' ';
+    while (end != string::npos || start < line.size())
     {
+        if (start >= line.size())
+        {
+            break;
+        }
+        if (line[start] == '\'' || line[start] == '\"')
+        {
+            currentChar = line[start];
+            start++;
+            end = line.find(currentChar, start);
+            if (end == string::npos)
+            {
+                end = line.size();
+            }
+        }
+        else
+        {
+            end = line.find(' ', start);
+            if (end == string::npos)
+            {
+                end = line.size();
+            }
+        }
         commandArray[i] = new char[end - start + 1];
         strcpy(commandArray[i], line.substr(start, end - start).c_str());
         start = end + 1;
-        end = line.find(' ', start);
         i++;
     }
-    commandArray[i] = new char[line.size() - start + 1];
-    strcpy(commandArray[i], line.substr(start).c_str());
-    i++;
     commandArray[i] = NULL;
 }
 
