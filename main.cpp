@@ -8,6 +8,8 @@
 #include <sys/wait.h>
 #include <vector>
 #include <regex>
+#include <fcntl.h>
+#include <fstream>
 
 using namespace std;
 
@@ -49,28 +51,6 @@ void separateCommandByPipes(string &line, char **pipedCommandsArray)
     i++;
     pipedCommandsArray[i] = NULL;
 }
-
-//void separateCommand(string &line, char **commandArray)
-//{
-//    line = regex_replace(line, regex(" +"), " ");
-//    line = regex_replace(line, regex("^ +"), "");
-//    line = regex_replace(line, regex(" +$"), "");
-//    size_t start = 0;
-//    size_t end = line.find(' ');
-//    int i = 0;
-//    while (end != string::npos)
-//    {
-//        commandArray[i] = new char[end - start + 1];
-//        strcpy(commandArray[i], line.substr(start, end - start).c_str());
-//        start = end + 1;
-//        end = line.find(' ', start);
-//        i++;
-//    }
-//    commandArray[i] = new char[line.size() - start + 1];
-//    strcpy(commandArray[i], line.substr(start).c_str());
-//    i++;
-//    commandArray[i] = NULL;
-//}
 
 // we split our string every time we encounter the " " space character
 // then we append the newly created strings, representing our arguments, into an array of arguments
@@ -122,22 +102,55 @@ int execute(char **commandArray, int len)
     string location = "/bin/" + name;
     strcpy(loc,location.c_str());
 
-    if (strcmp(commandArray[0], "cp") == 0)
-        execv("bin/cp", commandArray);
-    else if (strcmp(commandArray[0], "tee") == 0)
-        execv("bin/tee", commandArray);
-    else if (strcmp(commandArray[0], "dirname") == 0)
-        execv("bin/dirname", commandArray);
-    else if (strcmp(commandArray[0], "cd") == 0)
-        cout<<"The cd command is not supported yet."<<endl;
-    else if(execv(loc, commandArray) == -1 && strcmp(commandArray[0], "") != 0)
+    // searching in the array for the redirect signs until we find them
+    int redirectIndex = -1;
+    for(int i=0; commandArray[i] != NULL; i++)
     {
-        for(int i=0;i<len;i++)
-            cout<<commandArray[i]<<" ";
-        cout<<": command not found"<<endl;
+        if(strcmp(commandArray[i], ">") == 0 || strcmp(commandArray[i], ">>") == 0)
+        {
+            redirectIndex = i;
+            break;
+        }
+    }
+
+    if(redirectIndex == -1)
+    {
+        if (strcmp(commandArray[0], "cp") == 0)
+            execv("bin/cp", commandArray);
+        else if (strcmp(commandArray[0], "tee") == 0)
+            execv("bin/tee", commandArray);
+        else if (strcmp(commandArray[0], "dirname") == 0)
+            execv("bin/dirname", commandArray);
+        else if (strcmp(commandArray[0], "cd") == 0)
+            cout<<"The cd command is not supported yet."<<endl;
+        else if(execv(loc, commandArray) == -1 && strcmp(commandArray[0], "") != 0)
+        {
+            for(int i=0;i<len;i++)
+                cout<<commandArray[i]<<" ";
+            cout<<": command not found"<<endl;
+        }
+        else
+            execv(loc, commandArray);
     }
     else
-        execv(loc, commandArray);
+    {
+        string filename = commandArray[redirectIndex + 1];
+        int f;
+        if (strcmp(commandArray[redirectIndex], ">") == 0)
+        {
+            f = open(filename.c_str(), O_CREAT | O_TRUNC | O_WRONLY, 0644);
+        }
+        else // if commandArray[redirectIndex] is ">>"
+        {
+            f = open(filename.c_str(), O_CREAT | O_APPEND | O_WRONLY, 0644);
+        }
+        // redirecting the output of the previous command to the file
+        dup2(f, STDOUT_FILENO);
+        // removing the redirect ">" or ">>" and the name of the file from the array
+        commandArray[redirectIndex] = NULL;
+        // we execute the remaining command, the command that is situated before the redirect
+        return execvp(commandArray[0], commandArray);
+    }
 
     return 0;
 }
