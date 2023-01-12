@@ -70,13 +70,17 @@ void argType(int argc, char **argv, char **sourceArray, char *destination)
                         }
                     }
                     sourceArraySize = count;
-                    if (argv[i+1] != NULL)
+                    if (argv[i+1] != NULL && isDir(argv[i+1]) == 0 && isFileExists(argv[i+1]) == 1)
                     {
                         strcpy(destination,argv[i+1]);
                     }
+                    else if(isFileExists(argv[i+1]) == 0)
+                    {
+                        cout << "cp: failed to access '" << argv[i+1] << "': No such file or directory" << endl;
+                    }
                     else
                     {
-                        cout << "Please provide destination folder for -t parameter\n";
+                        cout << "cp: target '" << argv[i+1] << "' is not a directory" << endl;
                     }
                     return;
                 }
@@ -85,24 +89,69 @@ void argType(int argc, char **argv, char **sourceArray, char *destination)
     }
     else
     {
+        int argumenteCP = 0;
         for(int i=1;i<argc;i++)
         {
             if (argv[i][0] != '-')
             {
-                if (src_allocated == false)
+                argumenteCP++;
+            }
+        }
+        if(argc >= 3 && argumenteCP == 2)
+        {
+            for(int i=1;i<argc;i++)
+            {
+                if (argv[i][0] != '-')
                 {
-                    strcpy(source_path,argv[i]);
-                    src_allocated = true;
+                    if (src_allocated == false)
+                    {
+                        strcpy(source_path,argv[i]);
+                        src_allocated = true;
+                    }
+                    else
+                    {
+                        if (dest_allocated == true)
+                        {
+                            cout << "Too many parameters! Only the first two parameters were used in the copy command. \n";
+                            return;
+                        }
+                        strcpy(dest_path,argv[i]);
+                        dest_allocated = true;
+                    }
                 }
-                else
+            }
+        }
+        else
+        {
+            for(int i = argc - 1; i > 1; i--)
+            {
+                if (argv[i][0] != '-')
                 {
+                    if (isDir(argv[i]) == 0 && isFileExists(argv[i]) == 1)
+                    {
+                        strcpy(destination,argv[i]);
+                        dest_allocated = true;
+                    }
+                    else
+                    {
+                        cout<< "cp: target '" << argv[i] << "' is not a directory" << endl;
+                    }
+
                     if (dest_allocated == true)
                     {
-                        cout << "Too many parameters! Only the first two paramaters were used in the copy command. \n";
-                        return;
+                        int count = 0;
+                        for (int k = i - 1; k > 0; k--)
+                        {
+                            if(argv[k][0] != '-')
+                            {
+                                sourceArray[count] = argv[k];
+                                count++;
+                            }
+                        }
+                        sourceArraySize = count;
                     }
-                    strcpy(dest_path,argv[i]);
-                    dest_allocated = true;
+
+                    return;
                 }
             }
         }
@@ -115,7 +164,7 @@ int copy(char *source, char *dest)
     strcpy(destFile, dest);
     // check if source file exists
     if (isFileExists(source) == 0){
-        cout << "Source file does not exists!\n";
+        cout << "Source file does not exist!\n";
         return 0;
     }
 
@@ -248,8 +297,7 @@ void generate_source_array(string source_folder, const int root)
 
     while ((dp = readdir(dir)) != NULL)
     {
-        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
-        {
+        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0){
             path = (source_folder + "/" + dp->d_name);
             sourceFolder[sourceFolderSize] = path;
             sourceFolderSize++;
@@ -366,12 +414,30 @@ int main(int argc, char **argv)
     }
     else
     {
+        int argumenteCP = 0;
+        for(int i=1;i<argc;i++)
+        {
+            if (argv[i][0] != '-')
+            {
+                argumenteCP++;
+            }
+        }
         if (argc < 3)
         {
             cout << "cp: missing file operand\n"
-                    "Try 'cp --help' for more information.\n" << endl;
+                    "Try 'cp --help' for more information." << endl;
             return 0;
         }
-        copy(source_path,dest_path);
+        else if(argc >= 3 && argumenteCP == 2)
+        {
+            copy(source_path,dest_path);
+        }
+        else
+        {
+            for(int i=0; i<sourceArraySize; i++)
+            {
+                copy(sourceArray[i],destination);
+            }
+        }
     }
 }

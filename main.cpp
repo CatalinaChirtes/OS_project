@@ -113,7 +113,17 @@ int execute(char **commandArray, int len)
         }
     }
 
-    if(redirectIndex == -1)
+    int inversRedirectIndex = -1;
+    for(int i=0; commandArray[i] != NULL; i++)
+    {
+        if(strcmp(commandArray[i], "<") == 0)
+        {
+            inversRedirectIndex = i;
+            break;
+        }
+    }
+
+    if(redirectIndex == -1 && inversRedirectIndex == -1)
     {
         if (strcmp(commandArray[0], "cp") == 0)
             execv("bin/cp", commandArray);
@@ -132,7 +142,7 @@ int execute(char **commandArray, int len)
         else
             execv(loc, commandArray);
     }
-    else
+    else if(redirectIndex != -1)
     {
         string filename = commandArray[redirectIndex + 1];
         int f;
@@ -149,6 +159,24 @@ int execute(char **commandArray, int len)
         // removing the redirect ">" or ">>" and the name of the file from the array
         commandArray[redirectIndex] = NULL;
         // we execute the remaining command, the command that is situated before the redirect
+        return execvp(commandArray[0], commandArray);
+    }
+    // doesn't work yet
+    else if(inversRedirectIndex != -1)
+    {
+        string filename = commandArray[inversRedirectIndex + 1];
+        int f;
+        if (strcmp(commandArray[inversRedirectIndex], "<") == 0)
+        {
+            f = open(filename.c_str(), O_RDONLY);
+        }
+        // redirecting the input of the file to the command
+        dup2(f, STDIN_FILENO);
+        // closing the file descriptor
+        close(f);
+        // removing the redirect ">" and the name of the file from the array
+        commandArray[inversRedirectIndex] = NULL;
+        // we execute the remaining command, the command that is situated after the redirect
         return execvp(commandArray[0], commandArray);
     }
 
