@@ -9,7 +9,6 @@
 #include <vector>
 #include <regex>
 #include <fcntl.h>
-#include <fstream>
 
 using namespace std;
 
@@ -161,7 +160,6 @@ int execute(char **commandArray, int len)
         // we execute the remaining command, the command that is situated before the redirect
         return execvp(commandArray[0], commandArray);
     }
-    // doesn't work yet
     else if(inversRedirectIndex != -1)
     {
         string filename = commandArray[inversRedirectIndex + 1];

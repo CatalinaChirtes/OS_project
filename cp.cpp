@@ -18,8 +18,6 @@ char dest_path[1024];
 char *sourceArray[1024];
 char destination[1024];
 int sourceArraySize = 0;
-string sourceFolder[1024];
-int sourceFolderSize = 0;
 
 int isDir(const char* fileName)
 {
@@ -192,7 +190,7 @@ int copy(char *source, char *dest)
     {
         if (vflag != 0)
         {
-            cout << source << " -> " << destFile << "\n";
+            cout << "'" << source << "'" << " -> " << "'" << destFile << "'" << "\n";
         }
 
         FILE *file_open = fopen(source, "r");
@@ -218,93 +216,54 @@ int copy(char *source, char *dest)
 
 int copy_recursive(string source, char *dest)
 {
+    struct dirent *dp;
     char destFile[1024];
-    strcpy(destFile, dest);
+    char sourceFile[1024];
 
-    if ((isDir(dest)) == 0)
+    if (vflag != 0)
     {
-        if (isFileExists(dest) == 1)
-        {
-            strcpy(destFile, dest);
-            strcat(destFile, "/");
-            strcat(destFile, source.c_str());
-        }
-        else
-        {
-            if (mkdir(dest, 0777) == -1)
-                cout << "Error :  " << strerror(errno) << endl;
-            strcpy(destFile, dest);
-            strcat(destFile, "/");
-            strcat(destFile, source.c_str());
-        }
+        cout << "'" << source << "'" << " -> " << "'" << dest << "'" << "\n";
+    }
+    if (iflag != 0)
+    {
+        return 1;
     }
 
-    if (isDir(source.c_str()) == 0)
-    {
-        if (isFileExists(destFile) != 1)
-        {
-            if (mkdir(destFile, 0777) == -1)
-                cout << "Error :  " << strerror(errno) << endl;
-        }
-    }
+    DIR *dir = opendir(source.c_str());
 
-    if (isDir(source.c_str()) != 0)
+    if (!dir)
+        return 1;
+    else
     {
-        if (isFileExists(destFile) == 0)
+        if (mkdir(dest, 0777) == -1)
+            cout << "Error :  " << strerror(errno) << endl;
+
+        while ((dp = readdir(dir)) != NULL)
         {
-            ofstream newFile(destFile);
-        }
-        else
-        {
-            if (iflag != 0)
+            if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
             {
-                cout << "cp: overwrite '" << destFile <<"'?";
-                getchar();
+                strcpy(sourceFile, source.c_str());
+                strcat(sourceFile, "/");
+                strcat(sourceFile, dp->d_name);
+
+                strcpy(destFile, dest);
+                strcat(destFile, "/");
+                strcat(destFile, dp->d_name);
+
+                if (isDir(sourceFile) == 0)
+                {
+                    copy_recursive(sourceFile, destFile);
+                }
+                else
+                {
+                    copy(sourceFile, destFile);
+                }
             }
         }
-        if (vflag != 0)
-        {
-            cout << source << " -> " << destFile << "\n";
-        }
-
-        FILE *file_open = fopen(source.c_str(), "r");
-        FILE *file_write = fopen(destFile, "w");
-        char buffer[1024];
-        while (true)
-        {
-            size_t bytes_read = fread(buffer, 1, sizeof(buffer), file_open);
-            if (bytes_read == 0)
-                break;
-            fwrite(buffer, 1, bytes_read, file_write);
-        }
-        fclose(file_open);
-        fclose(file_write);
-
+        closedir(dir);
     }
 
     return 0;
-}
-
-void generate_source_array(string source_folder, const int root)
-{
-    int i;
-    string path;
-    struct dirent *dp;
-    DIR *dir = opendir(source_folder.c_str());
-
-    if (!dir)
-        return;
-
-    while ((dp = readdir(dir)) != NULL)
-    {
-        if (strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0){
-            path = (source_folder + "/" + dp->d_name);
-            sourceFolder[sourceFolderSize] = path;
-            sourceFolderSize++;
-
-            generate_source_array(path, root + 2);
-        }
-    }
 }
 
 int main(int argc, char **argv)
@@ -379,23 +338,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-        if (isFileExists(dest_path) != 1)
-        {
-            if (mkdir(dest_path, 0777) == -1)
-                cout << "Error :  " << strerror(errno) << endl;
-        }
-
-        sourceFolderSize = 0;
-        generate_source_array(source_path, 0);
-        for (int i=0; i<sourceFolderSize; i++)
-        {
-            size_t pos = sourceFolder[i].find('/');
-            if (pos != string::npos)
-            {
-                sourceFolder[i] = sourceFolder[i].substr(pos+1);
-            }
-            copy_recursive(sourceFolder[i],dest_path);
-        }
+        copy_recursive(source_path,dest_path);
     }
 
     else if(tflag != 0)
@@ -406,9 +349,25 @@ int main(int argc, char **argv)
         }
         else
         {
+            int countFolder = 0;
             for(int i=0; i<sourceArraySize; i++)
             {
-                copy(sourceArray[i],destination);
+                if(isDir(sourceArray[i]) == 0)
+                {
+                    countFolder++;
+                    break;
+                }
+            }
+            if(countFolder == 0)
+            {
+                for(int i=0; i<sourceArraySize; i++)
+                {
+                    copy(sourceArray[i],destination);
+                }
+            }
+            else
+            {
+                cout << "cp: -r not specified; not allowed to copy a folder to a file or a folder to a folder" << endl;
             }
         }
     }
@@ -430,13 +389,36 @@ int main(int argc, char **argv)
         }
         else if(argc >= 3 && argumenteCP == 2)
         {
-            copy(source_path,dest_path);
+            if(isDir(source_path) == 0)
+            {
+                cout << "cp: -r not specified; the source '" << source_path << "' must be a file" << endl;
+            }
+            else
+            {
+                copy(source_path,dest_path);
+            }
         }
         else
         {
+            int countFolder = 0;
             for(int i=0; i<sourceArraySize; i++)
             {
-                copy(sourceArray[i],destination);
+                if(isDir(sourceArray[i]) == 0)
+                {
+                    countFolder++;
+                    break;
+                }
+            }
+            if(countFolder == 0)
+            {
+                for(int i=0; i<sourceArraySize; i++)
+                {
+                    copy(sourceArray[i],destination);
+                }
+            }
+            else
+            {
+                cout << "cp: -r not specified; not allowed to copy a folder to a file or a folder to a folder" << endl;
             }
         }
     }
